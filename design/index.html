@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>清账本 - 多端同步记账原型</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <section class="login-screen" id="loginScreen" aria-labelledby="loginTitle">
+      <div class="login-panel">
+        <div class="brand login-brand">
+          <div class="brand-mark" aria-hidden="true">¥</div>
+          <div>
+            <strong>清账本</strong>
+            <span>个人多端同步记账</span>
+          </div>
+        </div>
+        <div class="login-copy">
+          <p class="eyebrow">欢迎回来</p>
+          <h1 id="loginTitle">登录后继续整理 6 月账本</h1>
+          <p>手机随手记，电脑慢慢看。收入、支出、预算和同步状态会在同一份账本里汇总。</p>
+        </div>
+        <form class="login-form" id="loginForm">
+          <label class="field">
+            <span>账号</span>
+            <input id="loginIdentifier" autocomplete="username" value="user@example.com" required />
+          </label>
+          <label class="field">
+            <span>密码</span>
+            <input id="loginPassword" type="password" autocomplete="current-password" value="demo1234" required />
+          </label>
+          <button class="primary-action login-submit" type="submit">
+            <span aria-hidden="true">→</span>
+            <span>进入演示账本</span>
+          </button>
+        </form>
+        <div class="login-foot">
+          <span>Web 账号登录</span>
+          <span>Access token / Refresh token</span>
+        </div>
+      </div>
+      <div class="login-ledger" aria-label="登录页账本预览">
+        <div class="login-ledger-line income">
+          <span>06/14</span>
+          <strong>工资</strong>
+          <em>+¥12,000.00</em>
+        </div>
+        <div class="login-ledger-line expense">
+          <span>06/15</span>
+          <strong>午餐</strong>
+          <em>-¥25.90</em>
+        </div>
+        <div class="login-ledger-line expense">
+          <span>06/10</span>
+          <strong>房租</strong>
+          <em>-¥3,200.00</em>
+        </div>
+        <div class="login-budget-card">
+          <span>6 月预算</span>
+          <strong>73%</strong>
+          <div class="progress-track">
+            <div class="progress-fill normal" style="width:73%"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="app-shell is-hidden" id="appShell" aria-hidden="true">
+      <aside class="sidebar" aria-label="主导航">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">¥</div>
+          <div>
+            <strong>清账本</strong>
+            <span>个人多端同步记账</span>
+          </div>
+        </div>
+
+        <nav class="nav-list">
+          <button class="nav-item is-active" data-route="home" type="button">
+            <span aria-hidden="true">⌂</span>
+            <span>首页</span>
+          </button>
+          <button class="nav-item" data-route="transactions" type="button">
+            <span aria-hidden="true">≡</span>
+            <span>账单</span>
+          </button>
+          <button class="nav-item" data-route="reports" type="button">
+            <span aria-hidden="true">▥</span>
+            <span>统计</span>
+          </button>
+          <button class="nav-item" data-route="budgets" type="button">
+            <span aria-hidden="true">◎</span>
+            <span>预算</span>
+          </button>
+          <button class="nav-item" data-route="settings" type="button">
+            <span aria-hidden="true">⚙</span>
+            <span>设置</span>
+          </button>
+        </nav>
+
+        <section class="sidebar-sync" aria-label="同步概览">
+          <div class="sync-dot"></div>
+          <div>
+            <strong>所有设备已同步</strong>
+            <span id="sidebarSyncTime">刚刚更新</span>
+          </div>
+        </section>
+      </aside>
+
+      <div class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow" id="routeEyebrow">2026 年 6 月账本</p>
+            <h1 id="routeTitle">首页</h1>
+          </div>
+          <div class="topbar-actions">
+            <button class="icon-button" id="syncNowButton" type="button" aria-label="立即同步" title="立即同步">
+              <span aria-hidden="true">↻</span>
+            </button>
+            <button class="primary-action" id="openEntryButton" type="button">
+              <span aria-hidden="true">+</span>
+              <span>记一笔</span>
+            </button>
+            <div class="user-chip" aria-label="当前用户">
+              <span class="avatar" aria-hidden="true">林</span>
+              <span>林小满</span>
+            </div>
+          </div>
+        </header>
+
+        <main class="content">
+          <section class="view is-active" id="view-home" data-view="home">
+            <div class="home-grid">
+              <section class="ledger-hero" aria-labelledby="homeHeroTitle">
+                <div>
+                  <p class="eyebrow">本月结余</p>
+                  <h2 id="homeHeroTitle" class="hero-amount" data-summary="balance"></h2>
+                  <p class="hero-copy">手机随手记账，电脑整理分析。这里显示的是同一份 6 月家庭账本。</p>
+                </div>
+                <div class="paper-tape" id="homeTape" aria-label="近期流水纸带"></div>
+              </section>
+
+              <section class="metric-grid" aria-label="本月摘要">
+                <article class="metric">
+                  <span>收入</span>
+                  <strong class="money income" data-summary="income"></strong>
+                </article>
+                <article class="metric">
+                  <span>支出</span>
+                  <strong class="money expense" data-summary="expense"></strong>
+                </article>
+                <article class="metric">
+                  <span>账单数</span>
+                  <strong id="summaryCount"></strong>
+                </article>
+              </section>
+
+              <section class="panel budget-panel" aria-labelledby="homeBudgetTitle">
+                <div class="section-head">
+                  <div>
+                    <p class="eyebrow">预算进度</p>
+                    <h2 id="homeBudgetTitle">6 月总预算</h2>
+                  </div>
+                  <button class="text-button" data-route-jump="budgets" type="button">管理预算</button>
+                </div>
+                <div id="homeBudgetProgress"></div>
+              </section>
+
+              <section class="panel" aria-labelledby="recentTitle">
+                <div class="section-head">
+                  <div>
+                    <p class="eyebrow">最近发生</p>
+                    <h2 id="recentTitle">近期账单</h2>
+                  </div>
+                  <button class="text-button" data-route-jump="transactions" type="button">查看全部</button>
+                </div>
+                <div class="transaction-list compact" id="recentTransactions"></div>
+              </section>
+            </div>
+          </section>
+
+          <section class="view" id="view-transactions" data-view="transactions">
+            <section class="toolbar-panel" aria-label="账单筛选">
+              <div class="segmented" role="group" aria-label="收支类型筛选">
+                <button class="is-active" data-filter-type="all" type="button">全部</button>
+                <button data-filter-type="expense" type="button">支出</button>
+                <button data-filter-type="income" type="button">收入</button>
+              </div>
+              <label class="field small">
+                <span>月份</span>
+                <select id="monthFilter">
+                  <option value="2026-06">2026-06</option>
+                  <option value="2026-05">2026-05</option>
+                </select>
+              </label>
+              <label class="field small">
+                <span>分类</span>
+                <select id="categoryFilter"></select>
+              </label>
+              <label class="field small">
+                <span>账户</span>
+                <select id="accountFilter"></select>
+              </label>
+              <label class="field search">
+                <span>备注搜索</span>
+                <input id="keywordFilter" type="search" placeholder="例如 午餐、地铁" />
+              </label>
+            </section>
+
+            <section class="panel" aria-labelledby="transactionTableTitle">
+              <div class="section-head">
+                <div>
+                  <p class="eyebrow">按发生时间倒序</p>
+                  <h2 id="transactionTableTitle">账单明细</h2>
+                </div>
+                <span class="page-state" id="pageState">第 1 页 / 每页 20 条</span>
+              </div>
+              <div class="ledger-table-wrap">
+                <table class="ledger-table">
+                  <thead>
+                    <tr>
+                      <th>时间</th>
+                      <th>分类</th>
+                      <th>账户</th>
+                      <th>备注</th>
+                      <th class="align-right">金额</th>
+                      <th class="align-right">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="transactionRows"></tbody>
+                </table>
+              </div>
+              <div class="transaction-cards" id="transactionCards"></div>
+            </section>
+          </section>
+
+          <section class="view" id="view-reports" data-view="reports">
+            <div class="report-grid">
+              <section class="panel" aria-labelledby="monthlyTitle">
+                <div class="section-head">
+                  <div>
+                    <p class="eyebrow">月度统计</p>
+                    <h2 id="monthlyTitle">6 月收支结构</h2>
+                  </div>
+                  <span class="status-pill normal">实时更新</span>
+                </div>
+                <div class="summary-strip" id="reportSummary"></div>
+              </section>
+
+              <section class="panel" aria-labelledby="categoryTitle">
+                <div class="section-head">
+                  <div>
+                    <p class="eyebrow">支出分类占比</p>
+                    <h2 id="categoryTitle">钱流向哪里</h2>
+                  </div>
+                </div>
+                <div class="bar-list" id="categoryBars"></div>
+              </section>
+
+              <section class="panel wide" aria-labelledby="trendTitle">
+                <div class="section-head">
+                  <div>
+                    <p class="eyebrow">年度趋势</p>
+                    <h2 id="trendTitle">2026 年每月收支</h2>
+                  </div>
+                </div>
+                <div class="trend-chart" id="trendChart" aria-label="年度收支柱状图"></div>
+              </section>
+            </div>
+          </section>
+
+          <section class="view" id="view-budgets" data-view="budgets">
+            <div class="budget-layout">
+              <section class="panel" aria-labelledby="budgetTotalTitle">
+                <div class="section-head">
+                  <div>
+                    <p class="eyebrow">总预算</p>
+                    <h2 id="budgetTotalTitle">6 月支出上限</h2>
+                  </div>
+                  <button class="text-button" id="editBudgetButton" type="button">调整预算</button>
+                </div>
+                <div id="budgetTotalCard"></div>
+              </section>
+              <section class="panel" aria-labelledby="categoryBudgetTitle">
+                <div class="section-head">
+                  <div>
+                    <p class="eyebrow">分类预算</p>
+                    <h2 id="categoryBudgetTitle">按消费类型观察</h2>
+                  </div>
+                </div>
+                <div class="budget-list" id="categoryBudgets"></div>
+              </section>
+            </div>
+          </section>
+
+          <section class="view" id="view-settings" data-view="settings">
+            <div class="settings-grid">
+              <section class="panel" aria-labelledby="profileTitle">
+                <div class="section-head">
+                  <div>
+                    <p class="eyebrow">账号</p>
+                    <h2 id="profileTitle">林小满的账本</h2>
+                  </div>
+                </div>
+                <div class="profile-block">
+                  <span class="avatar large" aria-hidden="true">林</span>
+                  <div>
+                    <strong>林小满</strong>
+                    <span>user@example.com</span>
+                  </div>
+                </div>
+              </section>
+
+              <section class="panel" aria-labelledby="syncTitle">
+                <div class="section-head">
+                  <div>
+                    <p class="eyebrow">多端同步</p>
+                    <h2 id="syncTitle">设备状态</h2>
+                  </div>
+                </div>
+                <div class="device-list" id="deviceList"></div>
+              </section>
+
+              <section class="panel" aria-labelledby="manageTitle">
+                <div class="section-head">
+                  <div>
+                    <p class="eyebrow">基础数据</p>
+                    <h2 id="manageTitle">分类与账户</h2>
+                  </div>
+                </div>
+                <div class="manage-columns">
+                  <div>
+                    <h3>常用分类</h3>
+                    <div class="tag-list" id="categoryTags"></div>
+                  </div>
+                  <div>
+                    <h3>资金账户</h3>
+                    <div class="account-stack" id="accountStack"></div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="panel" aria-labelledby="backupTitle">
+                <div class="section-head">
+                  <div>
+                    <p class="eyebrow">数据安全</p>
+                    <h2 id="backupTitle">备份与恢复</h2>
+                  </div>
+                  <button class="text-button" type="button">创建备份</button>
+                </div>
+                <div class="backup-list" id="backupList"></div>
+              </section>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <nav class="bottom-nav is-hidden" aria-label="移动端导航">
+      <button class="is-active" data-route="home" type="button">首页</button>
+      <button data-route="transactions" type="button">账单</button>
+      <button data-route="reports" type="button">统计</button>
+      <button data-route="budgets" type="button">预算</button>
+      <button data-route="settings" type="button">设置</button>
+    </nav>
+
+    <dialog class="entry-dialog" id="entryDialog" aria-labelledby="entryDialogTitle">
+      <form method="dialog" id="entryForm">
+        <div class="dialog-head">
+          <div>
+            <p class="eyebrow">快速记账</p>
+            <h2 id="entryDialogTitle">新增一笔收支</h2>
+          </div>
+          <button class="icon-button" id="closeEntryButton" type="button" aria-label="关闭">×</button>
+        </div>
+
+        <div class="segmented full" role="group" aria-label="收支类型">
+          <button class="is-active" data-entry-type="expense" type="button">支出</button>
+          <button data-entry-type="income" type="button">收入</button>
+        </div>
+
+        <label class="field">
+          <span>金额</span>
+          <input id="entryAmount" inputmode="decimal" placeholder="例如 25.90" required />
+        </label>
+        <label class="field">
+          <span>分类</span>
+          <select id="entryCategory" required></select>
+        </label>
+        <label class="field">
+          <span>账户</span>
+          <select id="entryAccount" required></select>
+        </label>
+        <label class="field">
+          <span>发生时间</span>
+          <input id="entryDate" type="datetime-local" required />
+        </label>
+        <label class="field">
+          <span>备注</span>
+          <textarea id="entryNote" rows="3" placeholder="选填，便于月底回看"></textarea>
+        </label>
+
+        <div class="dialog-actions">
+          <button class="secondary-action" id="cancelEntryButton" type="button">取消</button>
+          <button class="primary-action" type="submit">
+            <span aria-hidden="true">+</span>
+            <span>保存账单</span>
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
